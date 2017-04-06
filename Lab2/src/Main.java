@@ -103,6 +103,9 @@ public class Main {
                 case "thinking":
                     Philosopher.INSTANCE.nowThinking(System.currentTimeMillis());
                     break;
+                case "drinking":
+                	Philosopher.INSTANCE.nowDrinking(System.currentTimeMillis());
+                	break;
                 case "gui":
                     JFrame frame = new JFrame("Philosopher");
                     JPanel panel = new JPanel();

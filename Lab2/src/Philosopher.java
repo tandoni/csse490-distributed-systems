@@ -14,9 +14,11 @@ public class Philosopher implements Runnable {
     private volatile boolean hasLeftChopstick;
     private volatile boolean hasRightChopstick;
     private volatile boolean hungry;
+    private volatile boolean thirsty;
     private long timeLastAte;
     private long startedEating = 0L;
     private long startedThinking = 0L;
+    private long startedDrinking = 0L;
     private long startedChopstickAttempt = 0L;
     private boolean awake;
 
@@ -24,6 +26,7 @@ public class Philosopher implements Runnable {
         this.hasLeftChopstick = false;
         this.hasRightChopstick = false;
         this.hungry = new Random().nextBoolean();
+        this.thirsty = false;
         this.awake = false;
     }
 
@@ -148,10 +151,18 @@ public class Philosopher implements Runnable {
         System.out.println("Finished eating, thinking now.");
 
     }
+    
+	public synchronized void nowDrinking(long currentTimeMillis) {
+		this.hasLeftChopstick = false;
+		this.hasRightChopstick = false;
+		this.thirsty = false;
+	}
+
 
     public boolean isHungry() {
         return hungry;
     }
+
 
 
 }
