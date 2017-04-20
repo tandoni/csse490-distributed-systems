@@ -1,16 +1,16 @@
-import java.awt.EventQueue;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import java.text.ParseException;
+import java.util.Scanner;
 
 /**
  * Created by CJ on 3/23/2017.
@@ -101,18 +101,15 @@ public class Main {
                     break;
 
                 case "thinking":
-                    Philosopher.INSTANCE.nowThinking(System.currentTimeMillis());
+                    Philosopher.INSTANCE.nowThinking(System.currentTimeMillis(), false, false);
                     break;
-                case "drinking":
-                	Philosopher.INSTANCE.nowDrinking(System.currentTimeMillis());
-                	break;
                 case "gui":
                     JFrame frame = new JFrame("Philosopher");
                     JPanel panel = new JPanel();
                     JButton button = new JButton("Philosopher is hungry: " + Philosopher.INSTANCE.isHungry());
                     button.addActionListener((ae) -> {
                         if(Philosopher.INSTANCE.isHungry()) {
-                            Philosopher.INSTANCE.nowThinking(System.currentTimeMillis());
+                            Philosopher.INSTANCE.nowThinking(System.currentTimeMillis(), false, false);
                         } else {
                             Philosopher.INSTANCE.nowHungry(System.currentTimeMillis());
                         }

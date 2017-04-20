@@ -35,6 +35,10 @@ public class ClientResponder implements Runnable {
             Message message = Message.valueOf(messageRaw);
 
             switch (message) {
+            	case CUP:
+            		Philosopher.INSTANCE.giveCup();
+            		System.out.println("I now have the cup");
+            	
                 case REQUEST_CHOPSTICK:
                     if(onGoingRequest) {
                         sendMessage(Message.NO);
@@ -135,4 +139,8 @@ public class ClientResponder implements Runnable {
     public void sendWakeup() {
         this.sendMessage(Message.WAKE_UP);
     }
+
+	public void passCup() {
+		this.sendMessage(Message.CUP);
+	}
 }

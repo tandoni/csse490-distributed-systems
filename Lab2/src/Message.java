@@ -8,8 +8,9 @@ public enum Message {
     NO ("No, you may not"),
     YOU_ARE_MY_LEFT ("You are my left node"),
     YOU_ARE_MY_RIGHT ("You are my right node"),
-    WAKE_UP("Yo, wake up bruh");
-
+    WAKE_UP("Yo, wake up bruh"),
+    CUP("Here is the cup");
+    
     private final String message;
 
     Message(String message) {

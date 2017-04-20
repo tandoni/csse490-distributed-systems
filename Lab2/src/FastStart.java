@@ -13,9 +13,11 @@ public class FastStart {
         Node right = getNode(args[2]);
         long sleepTime = Long.parseLong(args[3]);
         int tickRAte = Integer.parseInt(args[4]);
-
+        boolean cup = Boolean.parseBoolean(args[5]);
+        
         Philosopher.INSTANCE.setStarvationTime(tickRAte);
-
+        Philosopher.INSTANCE.setHasCup(cup);
+        
         Runnable r2 = new Server(port);
         Thread t2 = new Thread(r2);
         t2.start();
