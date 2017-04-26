@@ -95,7 +95,10 @@ public class Main {
                     Communicator.INSTANCE.rightSocket.sendWakeup();
                     Philosopher.INSTANCE.wakeUp();
                     break;
-
+                case "sleep":
+                	Philosopher.INSTANCE.nowSleeping(System.currentTimeMillis());
+                case "thirsty":
+                	Philosopher.INSTANCE.nowThirsty(System.currentTimeMillis());
                 case "hungry":
                     Philosopher.INSTANCE.nowHungry(System.currentTimeMillis());
                     break;
