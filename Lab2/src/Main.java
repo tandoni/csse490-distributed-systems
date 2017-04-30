@@ -90,16 +90,33 @@ public class Main {
         while(true) {
             String input = reader.readLine();
             switch (input) {
+            	case "playing": 
+            	
+            
                 case "start":
                     Communicator.INSTANCE.leftSocket.sendWakeup();
                     Communicator.INSTANCE.rightSocket.sendWakeup();
                     Philosopher.INSTANCE.wakeUp();
                     break;
                 case "sleep":
+                	if(Philosopher.INSTANCE.getManual().equals("sleep")) {
+                		Philosopher.INSTANCE.nowManual("not");
+                	}
+                	Philosopher.INSTANCE.nowManual("sleep");
                 	Philosopher.INSTANCE.nowSleeping(System.currentTimeMillis());
+                	break;
                 case "thirsty":
+                	if(Philosopher.INSTANCE.getManual().equals("thirsty")) {
+                		Philosopher.INSTANCE.nowManual("not");
+                	}
+                	Philosopher.INSTANCE.nowManual("thirsty");
                 	Philosopher.INSTANCE.nowThirsty(System.currentTimeMillis());
+                	break;
                 case "hungry":
+                	if(Philosopher.INSTANCE.getManual().equals("hungry")) {
+                		Philosopher.INSTANCE.nowManual("not");
+                	}
+                	Philosopher.INSTANCE.nowManual("hungry");
                     Philosopher.INSTANCE.nowHungry(System.currentTimeMillis());
                     break;
 

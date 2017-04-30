@@ -16,6 +16,7 @@ public class Server implements Runnable{
 	@Override
 	public void run() {
         ServerSocket serverSocket = null;
+//        Zookeeper zkClient = new ZooKeeper("");
         try {
             serverSocket = new ServerSocket(port);
             System.out.println("Server Accepting Clients");

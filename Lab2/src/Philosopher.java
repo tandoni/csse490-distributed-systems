@@ -23,7 +23,8 @@ public class Philosopher implements Runnable {
     private long startedChopstickAttempt = 0L;
     private boolean awake;
 	private boolean isPlaying;
-
+	private String manual;
+	
     private Philosopher() {
         this.hasLeftChopstick = false;
         this.hasRightChopstick = false;
@@ -32,6 +33,7 @@ public class Philosopher implements Runnable {
         this.thirsty = new Random().nextBoolean();
         this.awake = false;
         this.isPlaying = false;
+        this.manual = "not";
     }
 
     public synchronized boolean isAwake() {
@@ -79,57 +81,61 @@ public class Philosopher implements Runnable {
 //            System.out.format("Last ate: %d    startedEating: %d\n", this.timeLastAte - currentTime, startedEating - currentTime);
 //            System.out.format("Table state, Left: %b  Right: %b\n", this.hasLeftChopstick, this.hasRightChopstick);
 
+            if(this.manual.equals("sleep")) {
+            	this.nowSleeping(currentTime);
+            } else {
 
-            // If eating, reset timestamp
-            if (isEating()) this.timeLastAte = currentTime;
-
-            if (this.timeLastAte + starvationTime < currentTime) {
-                System.err.println("I starved");
-                System.exit(1);
-            }
-            if((this.startedDrinking == 0L) && isDrinking()) this.startedDrinking = currentTime;
-            	
-            if (isDrinking() && (starvationTime / 40 + this.startedDrinking < currentTime || Math.random() > 0.9)) {
-            	nowThinking(currentTime, false, true);
-            } else if(!this.thirsty && (starvationTime / 4 + this.startedThinking < currentTime || Math.random() > 0.9)) {
-            	nowThirsty(currentTime);
-            }
-
-            if (isEating() && (starvationTime / 40 + startedEating < currentTime || Math.random() > 0.9)) { // check how long we've been eating and stop if necessary
-                nowThinking(currentTime, true, false);
-            } else if (!this.hungry && (starvationTime / 4 + startedThinking < currentTime || Math.random() > 0.99)) { // Don't think for more than 1 second
-                this.nowHungry(currentTime);
-            } else if (this.hungry && !this.isEating() && startedChopstickAttempt + starvationTime / 40 < currentTime) { 
-                synchronized (this) {
-                    hasLeftChopstick = false;
-                    hasRightChopstick = false;
-                }
-                try {
-                    System.err.println("Sleeping for a bit");
-                    Thread.sleep(Math.round(Math.random() * starvationTime / 40.0));
-                    startedChopstickAttempt = System.currentTimeMillis();
-                } catch (InterruptedException e) {
-                }
-            }
-
-            // If hungry but not eating, try to take chopsticks
-            if (!isEating() && this.hungry) {
-                synchronized (this) {
-                    if (!hasLeftChopstick) Communicator.INSTANCE.leftSocket.requestChopstick();
-                    if (!hasRightChopstick) Communicator.INSTANCE.rightSocket.requestChopstick();
-                }
-            }
-            
-            try {
-                Thread.sleep(Math.round(Math.ceil(starvationTime / 4000.0)));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            
-            if(!isDrinking() || !isEating() || !isHungry() || !this.thirsty) {
-            	Communicator.INSTANCE.leftSocket.requestGame();
-            	Communicator.INSTANCE.rightSocket.requestGame();
-            }
+	            // If eating, reset timestamp
+	            if (isEating()) this.timeLastAte = currentTime;
+	
+	            if (this.timeLastAte + starvationTime < currentTime) {
+	                System.err.println("I starved");
+	                System.exit(1);
+	            }
+	            if((this.startedDrinking == 0L) && isDrinking()) this.startedDrinking = currentTime;
+	            	
+	            if (isDrinking() && (starvationTime / 40 + this.startedDrinking < currentTime || Math.random() > 0.9)) {
+	            	nowThinking(currentTime, false, true);
+	            } else if(!this.thirsty && (starvationTime / 4 + this.startedThinking < currentTime || Math.random() > 0.9)) {
+	            	nowThirsty(currentTime);
+	            }
+	
+	            if (isEating() && (starvationTime / 40 + startedEating < currentTime || Math.random() > 0.9)) { // check how long we've been eating and stop if necessary
+	                nowThinking(currentTime, true, false);
+	            } else if (!this.hungry && (starvationTime / 4 + startedThinking < currentTime || Math.random() > 0.99)) { // Don't think for more than 1 second
+	                this.nowHungry(currentTime);
+	            } else if (this.hungry && !this.isEating() && startedChopstickAttempt + starvationTime / 40 < currentTime) { 
+	                synchronized (this) {
+	                    hasLeftChopstick = false;
+	                    hasRightChopstick = false;
+	                }
+	                try {
+	                    System.err.println("Sleeping for a bit");
+	                    Thread.sleep(Math.round(Math.random() * starvationTime / 40.0));
+	                    startedChopstickAttempt = System.currentTimeMillis();
+	                } catch (InterruptedException e) {
+	                }
+	            }
+	
+	            // If hungry but not eating, try to take chopsticks
+	            if (!isEating() && this.hungry) {
+	                synchronized (this) {
+	                    if (!hasLeftChopstick) Communicator.INSTANCE.leftSocket.requestChopstick();
+	                    if (!hasRightChopstick) Communicator.INSTANCE.rightSocket.requestChopstick();
+	                }
+	            }
+	            
+	            try {
+	                Thread.sleep(Math.round(Math.ceil(starvationTime / 4000.0)));
+	            } catch (InterruptedException e) {
+	                e.printStackTrace();
+	            }
+	            
+//	            if(!isDrinking() || !isEating() || !isHungry() || !this.thirsty) {
+//	            	Communicator.INSTANCE.leftSocket.requestGame();
+//	            	Communicator.INSTANCE.rightSocket.requestGame();
+//	            }
+	        }
         }
     }
 
@@ -159,8 +165,6 @@ public class Philosopher implements Runnable {
     }
 
     public synchronized void nowSleeping(long currentTime) {
-    	
-    	
     	synchronized (this) {
             hasLeftChopstick = false;
             hasRightChopstick = false;
@@ -188,8 +192,14 @@ public class Philosopher implements Runnable {
         if(!eat && !drink) {
         	this.hasLeftChopstick = false;
 	        this.hasRightChopstick = false;
-	        this.hungry = false;
-	        this.thirsty = false;
+	        if(this.manual.equals("not")) {
+	        	this.hungry = false;
+	        	this.thirsty = false;
+	        } else if(this.manual.equals("hungry")) {
+	        	this.thirsty = false;
+	        } else if(this.manual.equals("thirsty")) {
+	        	this.hungry = false;
+	        }
 	        if(this.hasCup) {
 	        	this.hasCup = false;
 	    		Communicator.INSTANCE.leftSocket.passCup();
@@ -197,9 +207,13 @@ public class Philosopher implements Runnable {
         } else if (eat) {
 	    	this.hasLeftChopstick = false;
 	        this.hasRightChopstick = false;
-	        this.hungry = false;
+	        if(!this.manual.equals("hungry")) {
+	        	this.hungry = false;
+	        }
 	    } else if (drink) {
-	    	this.thirsty = false;
+	    	if(!this.manual.equals("thirsty")) {
+	    		this.thirsty = false;
+	    	}
 	    	this.hasCup = false;
 	    	Communicator.INSTANCE.leftSocket.passCup();
 	    }
@@ -237,6 +251,14 @@ public class Philosopher implements Runnable {
 
 	public void setHasCup(boolean cup) {
 		this.hasCup = cup;
+	}
+
+	public void nowManual(String man) {
+		this.manual = man;
+	}
+
+	public String getManual() {
+		return this.manual;
 	}
 
 

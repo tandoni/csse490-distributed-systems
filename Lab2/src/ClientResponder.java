@@ -35,14 +35,14 @@ public class ClientResponder implements Runnable {
             Message message = Message.valueOf(messageRaw);
 
             switch (message) {
-            	case GAME_QUESTION:
-            		if(!Philosopher.INSTANCE.isDrinking() && !Philosopher.INSTANCE.isEating()) {
-            			sendMessage(Message.AGREE_TO_GAME);
-            			Philosopher.INSTANCE.nowPlaying();
-            		} else {
-            			sendMessage(Message.DENY_GAME);
-            		}
-            	
+//            	case GAME_QUESTION:
+//            		if(!Philosopher.INSTANCE.isDrinking() && !Philosopher.INSTANCE.isEating()) {
+//            			sendMessage(Message.AGREE_TO_GAME);
+//            			Philosopher.INSTANCE.nowPlaying();
+//            		} else {
+//            			sendMessage(Message.DENY_GAME);
+//            		}
+//            	
             	case CUP:
             		Philosopher.INSTANCE.giveCup();
             		System.out.println("I now have the cup");
@@ -152,8 +152,8 @@ public class ClientResponder implements Runnable {
 		this.sendMessage(Message.CUP);
 	}
 
-	public void requestGame() {
-		this.sendMessage(Message.GAME_QUESTION);
-
-	}
+//	public void requestGame() {
+//		this.sendMessage(Message.GAME_QUESTION);
+//
+//	}
 }
