@@ -67,7 +67,6 @@ public class Philosopher implements Runnable {
         System.out.println("Started philosopher");
     }
 
-
     @Override
     public void run() {
         System.out.println("I know who is on my left and right..");

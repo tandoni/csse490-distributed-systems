@@ -2,6 +2,9 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
+
 /**
  * Created by CJ on 3/23/2017.
  */
@@ -16,7 +19,8 @@ public class Server implements Runnable{
 	@Override
 	public void run() {
         ServerSocket serverSocket = null;
-//        Zookeeper zkClient = new ZooKeeper("");
+        ZooKeeper zkClient = new ZooKeeper("ishank.wlan.rose-hulman.edu", 2182, );
+        Watcher w = new Watcher
         try {
             serverSocket = new ServerSocket(port);
             System.out.println("Server Accepting Clients");
