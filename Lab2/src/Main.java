@@ -1,21 +1,26 @@
 import javax.swing.*;
+
+import org.apache.zookeeper.Watcher.Event.KeeperState;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by CJ on 3/23/2017.
  */
 public class Main {
+	
     public static void main(String[] args) throws IOException {
         try {
             Philosopher.INSTANCE.setStarvationTime(Integer.parseInt(args[0]));
@@ -23,7 +28,23 @@ public class Main {
             System.err.println("Invalid tick rate provided");
             System.exit(1);
         }
+        CountDownLatch connSignal = new CountDownLatch(0);
 
+        ZooKeeper zk = new ZooKeeper("137.112.224.182:2181", 3000, new Watcher()  {
+	        	public void process(WatchedEvent event) {
+	        		if(event.getState() == KeeperState.SyncConnected){
+	        			connSignal.countDown();
+	        			System.out.println("I'm connected!");
+	        		}
+	        	}
+	        });
+        	try {
+				connSignal.await();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+        	
+        
         System.out.println("Local Server Port");
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));

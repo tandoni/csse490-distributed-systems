@@ -19,8 +19,8 @@ public class Server implements Runnable{
 	@Override
 	public void run() {
         ServerSocket serverSocket = null;
-        ZooKeeper zkClient = new ZooKeeper("ishank.wlan.rose-hulman.edu", 2182, );
-        Watcher w = new Watcher
+        //ZooKeeper zkClient = new ZooKeeper("ishank.wlan.rose-hulman.edu", 2182, );
+        //Watcher w = new Watcher
         try {
             serverSocket = new ServerSocket(port);
             System.out.println("Server Accepting Clients");
