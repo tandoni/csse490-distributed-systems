@@ -7,153 +7,165 @@ import java.util.Random;
  */
 public class ClientResponder implements Runnable {
 
-    private final BufferedReader reader;
-    private final BufferedWriter writer;
-    private final Socket socket;
-    private boolean isLeft;
+	private final BufferedReader reader;
+	private final BufferedWriter writer;
+	private final Socket socket;
+	private boolean isLeft;
 
-    private boolean onGoingRequest;
-    private boolean onRequestCooldown;
+	private boolean onGoingRequest;
+	private boolean onRequestCooldown;
 
-    public ClientResponder(Socket socket) throws IOException {
-        this.socket = socket;
-        this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-    }
+	public ClientResponder(Socket socket) throws IOException {
+		this.socket = socket;
+		this.reader = new BufferedReader(new InputStreamReader(
+				socket.getInputStream()));
+		this.writer = new BufferedWriter(new OutputStreamWriter(
+				socket.getOutputStream()));
+	}
 
-    @Override
-    public void run() {
-        while (true) {
-            String messageRaw = null;
-            try {
-                messageRaw = reader.readLine();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
+	@Override
+	public void run() {
+		while (true) {
+			String messageRaw = null;
+			try {
+				messageRaw = reader.readLine();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return;
+			}
 
-            Message message = Message.valueOf(messageRaw);
+			Message message = Message.valueOf(messageRaw);
 
-            switch (message) {
-//            	case GAME_QUESTION:
-//            		if(!Philosopher.INSTANCE.isDrinking() && !Philosopher.INSTANCE.isEating()) {
-//            			sendMessage(Message.AGREE_TO_GAME);
-//            			Philosopher.INSTANCE.nowPlaying();
-//            		} else {
-//            			sendMessage(Message.DENY_GAME);
-//            		}
-//            	
-            	case CUP:
-            		Philosopher.INSTANCE.giveCup();
-            		System.out.println("I now have the cup");
-            		
-                case REQUEST_CHOPSTICK:
-                    if(onGoingRequest) {
-                        sendMessage(Message.NO);
-                        onRequestCooldown = true;
-                        new Thread(() -> {
-                            try {
-                                Thread.sleep(Math.round(Math.random() * 100));
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            onGoingRequest = true;
-                            onRequestCooldown = false;
-                            sendMessage(Message.REQUEST_CHOPSTICK);
-                        }).start();
-                        onGoingRequest = false;
-                        break;
-                    }
+			switch (message) {
+			// case GAME_QUESTION:
+			// if(!Philosopher.INSTANCE.isDrinking() &&
+			// !Philosopher.INSTANCE.isEating()) {
+			// sendMessage(Message.AGREE_TO_GAME);
+			// Philosopher.INSTANCE.nowPlaying();
+			// } else {
+			// sendMessage(Message.DENY_GAME);
+			// }
+			//
+			case CUP:
+				Philosopher.INSTANCE.giveCup();
+				System.out.println("I now have the cup");
 
-                    boolean available = Philosopher.INSTANCE.requestChopstick(isLeft);
+			case REQUEST_CHOPSTICK:
+				if (onGoingRequest) {
+					sendMessage(Message.NO);
+					onRequestCooldown = true;
+					new Thread(() -> {
+						try {
+							Thread.sleep(Math.round(Math.random() * 100));
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						onGoingRequest = true;
+						onRequestCooldown = false;
+						sendMessage(Message.REQUEST_CHOPSTICK);
+					}).start();
+					onGoingRequest = false;
+					break;
+				}
 
-                    if (available) {
-                        sendMessage(Message.YES);
-                    } else {
-                        sendMessage(Message.NO);
-                    }
+				boolean available = Philosopher.INSTANCE
+						.requestChopstick(isLeft);
 
-                    break;
+				if (available) {
+					sendMessage(Message.YES);
+				} else {
+					sendMessage(Message.NO);
+				}
 
-                case YOU_ARE_MY_LEFT:
-                    Communicator.INSTANCE.rightSocket = this;
-                    this.isLeft = false;
-                    System.out.println("A client has identified as my right");
-                    break;
+				break;
 
-                case YOU_ARE_MY_RIGHT:
-                    Communicator.INSTANCE.leftSocket = this;
-                    this.isLeft = true;
-                    System.out.println("A client has identified as my left");
-                    break;
+			case YOU_ARE_MY_LEFT:
+				Communicator.INSTANCE.rightSocket = this;
+				this.isLeft = false;
+				System.out.println("A client has identified as my right");
+				break;
 
-                case YES:
-                    Philosopher.INSTANCE.takeChopstick(isLeft);
-                    onGoingRequest = false;
-                    break;
-                case NO:
-                    Philosopher.INSTANCE.dropChopstick(isLeft);
-                    onGoingRequest = false;
-                    break;
-                case WAKE_UP:
-                    if (!Philosopher.INSTANCE.isAwake()) {
-                        if (isLeft) Communicator.INSTANCE.rightSocket.sendMessage(Message.WAKE_UP);
-                        else  Communicator.INSTANCE.leftSocket.sendMessage(Message.WAKE_UP);
-                        Philosopher.INSTANCE.wakeUp();
-                    }
-                    break;
-                default:
-                    System.err.println("Received invalid message from a client, Message: " + messageRaw);
-                    break;
-            }
-        }
-    }
+			case YOU_ARE_MY_RIGHT:
+				Communicator.INSTANCE.leftSocket = this;
+				this.isLeft = true;
+				System.out.println("A client has identified as my left");
+				break;
 
-    public void registerAsLeft() {
-        sendMessage(Message.YOU_ARE_MY_LEFT);
-        Communicator.INSTANCE.leftSocket = this;
-        this.isLeft = true;
-    }
+			case YES:
+				Philosopher.INSTANCE.takeChopstick(isLeft);
+				onGoingRequest = false;
+				break;
+			case NO:
+				Philosopher.INSTANCE.dropChopstick(isLeft);
+				onGoingRequest = false;
+				break;
+			case WAKE_UP:
+				if (!Philosopher.INSTANCE.isAwake()) {
+					if (isLeft)
+						Communicator.INSTANCE.rightSocket
+								.sendMessage(Message.WAKE_UP);
+					else
+						Communicator.INSTANCE.leftSocket
+								.sendMessage(Message.WAKE_UP);
+					Philosopher.INSTANCE.wakeUp();
+				}
+				break;
+			default:
+				System.err
+						.println("Received invalid message from a client, Message: "
+								+ messageRaw);
+				break;
+			}
+		}
+	}
 
-    public void registerAsRight() {
-        sendMessage(Message.YOU_ARE_MY_RIGHT);
-        Communicator.INSTANCE.rightSocket = this;
-        this.isLeft = false;
-    }
+	public void registerAsLeft() {
+		sendMessage(Message.YOU_ARE_MY_LEFT);
+		Communicator.INSTANCE.leftSocket = this;
+		this.isLeft = true;
+	}
 
-    private void sendMessage(Message s) {
-        try {
-            writer.write(s + "\n");
-            writer.flush();
-        } catch (IOException e) {
-            System.err.println("Unable to communicate with via " + this.toString());
-            System.exit(1);
-        }
+	public void registerAsRight() {
+		sendMessage(Message.YOU_ARE_MY_RIGHT);
+		Communicator.INSTANCE.rightSocket = this;
+		this.isLeft = false;
+	}
 
-    }
+	private void sendMessage(Message s) {
+		try {
+			writer.write(s + "\n");
+			writer.flush();
+		} catch (IOException e) {
+			System.err.println("Unable to communicate with via "
+					+ this.toString());
+			System.exit(1);
+		}
 
-    @Override
-    public String toString() {
-        return String.format("%s:%s:%s", socket.getInetAddress(), socket.getLocalPort(), socket.getPort());
-    }
+	}
 
-    public void requestChopstick() {
-        if(!(onGoingRequest || onRequestCooldown)) {
-            onGoingRequest = true;
-            this.sendMessage(Message.REQUEST_CHOPSTICK);
-        }
-    }
+	@Override
+	public String toString() {
+		return String.format("%s:%s:%s", socket.getInetAddress(),
+				socket.getLocalPort(), socket.getPort());
+	}
 
-    public void sendWakeup() {
-        this.sendMessage(Message.WAKE_UP);
-    }
+	public void requestChopstick() {
+		if (!(onGoingRequest || onRequestCooldown)) {
+			onGoingRequest = true;
+			this.sendMessage(Message.REQUEST_CHOPSTICK);
+		}
+	}
+
+	public void sendWakeup() {
+		this.sendMessage(Message.WAKE_UP);
+	}
 
 	public void passCup() {
 		this.sendMessage(Message.CUP);
 	}
 
-//	public void requestGame() {
-//		this.sendMessage(Message.GAME_QUESTION);
-//
-//	}
+	// public void requestGame() {
+	// this.sendMessage(Message.GAME_QUESTION);
+	//
+	// }
 }

@@ -9,8 +9,9 @@ public class Philosopher implements Runnable {
     static {
         INSTANCE = new Philosopher();
     }
-
+    
     private long starvationTime = 4000L;
+    private Node node;
     private volatile boolean hasLeftChopstick;
     private volatile boolean hasRightChopstick;
     private volatile boolean hasCup;
@@ -201,7 +202,7 @@ public class Philosopher implements Runnable {
 	        }
 	        if(this.hasCup) {
 	        	this.hasCup = false;
-	    		Communicator.INSTANCE.leftSocket.passCup();
+				Communicator.INSTANCE.leftSocket.passCup();
 	        }
         } else if (eat) {
 	    	this.hasLeftChopstick = false;
@@ -243,7 +244,11 @@ public class Philosopher implements Runnable {
     public boolean isHungry() {
         return hungry;
     }
-
+    
+    public boolean isThirsty() {
+    	return thirsty;
+    }
+    
 	public void giveCup() {
 		this.hasCup = true;
 	}
@@ -260,6 +265,12 @@ public class Philosopher implements Runnable {
 		return this.manual;
 	}
 
-
+	public void setNode(Node node) {
+		this.node = node;
+	}
+	
+	public Node getNode() {
+		return this.node;
+	}
 
 }
