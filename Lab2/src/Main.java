@@ -26,7 +26,6 @@ public class Main {
 			System.exit(1);
 		}
 		
-		
 		int myNum = Integer.parseInt(args[1]);
 		int numPhilo = Integer.parseInt(args[2]);
 		int zkleft, zkright;
@@ -35,6 +34,11 @@ public class Main {
 		ZooKeeper zk = new ZooKeeper("ishank.wlan.rose-hulman.edu:2181", 3000, watch);
 		
 		try {
+			if(zk.exists("/start", watch) == null) {
+				zk.create("/start", "false".getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT)
+			}
+			
+			
 			if (zk.exists("/c", watch) == null) {
 				zk.create("/c", "start".getBytes(), Ids.OPEN_ACL_UNSAFE,
 						CreateMode.PERSISTENT);
