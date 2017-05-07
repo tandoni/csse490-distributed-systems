@@ -23,12 +23,15 @@ public class Philosopher implements Runnable {
 	private volatile boolean hungry;
 	private volatile boolean thirsty;
 	private long timeLastAte;
+	private long timeStartedWaiting = System.currentTimeMillis();
+	private long timeStartedGaming = System.currentTimeMillis();
 	private long startedEating = 0L;
 	private long startedDrinking = 0L;
 	private long startedThinking = 0L;
 	private long startedChopstickAttempt = 0L;
 	private boolean awake;
 	private boolean isPlaying;
+	private boolean isWaiting;
 	private String manual;
 
 	private Philosopher() {
@@ -92,18 +95,60 @@ public class Philosopher implements Runnable {
 			// System.out.format("Current Time: %d\n", currentTime);
 			// System.out.format("Is hungry: %b since %d\n", this.hungry,
 			// this.startedChopstickAttempt - currentTime);
-			// System.out.format("Last ate: %d    startedEating: %d\n",
+			// System.out.format("Last ate: %d startedEating: %d\n",
 			// this.timeLastAte - currentTime, startedEating - currentTime);
-			// System.out.format("Table state, Left: %b  Right: %b\n",
+			// System.out.format("Table state, Left: %b Right: %b\n",
 			// this.hasLeftChopstick, this.hasRightChopstick);
 
 			if (this.manual.equals("sleep")) {
 				this.nowSleeping(currentTime);
+			} else if (this.isPlaying || this.isWaiting) {
+				String left = "";
+				String right = "";
+
+				try {
+					left = new String(this.node.zk.getData(this.node.gLeft, true, null));
+					right = new String(this.node.zk.getData(this.node.gRight, true, null));
+				} catch (KeeperException | InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				
+				if (left.equals("true") && right.equals("game")) {
+						try {
+							this.node.zk.setData(this.node.gLeft, "false".getBytes(), -1);
+						} catch (KeeperException | InterruptedException e) {
+							e.printStackTrace();
+						}
+				
+				}
+				if (left.equals("game") && right.equals("true")) {
+					try {
+						this.node.zk.setData(this.node.gRight, "false".getBytes(), -1);
+					} catch (KeeperException | InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+
+				if ((left.equals("game") || right.equals("game")) && (this.timeStartedGaming + 10000 < currentTime
+						&& this.timeStartedWaiting + 15000 < currentTime)) {
+					doneGaming();
+				}
+				if (left.equals("false") && right.equals("false")) {
+					doneGaming();
+				}
+
+				// if (this.timeStartedWaiting + 15000 < currentTime) {
+				// System.err.println("quit looking for game");
+				// doneGaming();
+				// }
+				// if (this.timeStartedGaming + 10000 < currentTime) {
+				// System.err.println("quit gaming");
+				// doneGaming();
+				// }
 			} else {
 
 				// If eating, reset timestamp
 				if (isEating()) {
-					System.out.println("eating");
 					this.timeLastAte = currentTime;
 				}
 				if (this.timeLastAte + starvationTime < currentTime) {
@@ -113,13 +158,10 @@ public class Philosopher implements Runnable {
 				if ((this.startedDrinking == 0L) && isDrinking())
 					this.startedDrinking = currentTime;
 
-				if (isDrinking()
-						&& (starvationTime / 40 + this.startedDrinking < currentTime || Math
-								.random() > 0.9)) {
+				if (isDrinking() && (starvationTime / 40 + this.startedDrinking < currentTime || Math.random() > 0.9)) {
 					nowThinking(currentTime, false, true);
 				} else if (!this.thirsty
-						&& (starvationTime / 1 + this.startedThinking < currentTime || Math
-								.random() > 0.9)) {
+						&& (starvationTime / 1 + this.startedThinking < currentTime || Math.random() > 0.9)) {
 					nowThirsty(currentTime);
 				} else if (this.thirsty && !this.hasCup) {
 					String cup = "";
@@ -136,28 +178,37 @@ public class Philosopher implements Runnable {
 
 				}
 
-				if (isEating()
-						&& (starvationTime / 40 + startedEating < currentTime || Math
-								.random() > 0.9)) { // check how long we've been
-													// eating and stop if
-													// necessary
+				if (isEating() && (starvationTime / 40 + startedEating < currentTime || Math.random() > 0.9)) { // check
+																												// how
+																												// long
+																												// we've
+																												// been
+																												// eating
+																												// and
+																												// stop
+																												// if
+																												// necessary
 					nowThinking(currentTime, true, false);
 				} else if (!this.hungry
-						&& (starvationTime / 4 + startedThinking < currentTime || Math
-								.random() > 0.99)) { // Don't think for more
-														// than 1 second
+						&& (starvationTime / 4 + startedThinking < currentTime || Math.random() > 0.99)) { // Don't
+																											// think
+																											// for
+																											// more
+																											// than
+																											// 1
+																											// second
 					this.nowHungry(currentTime);
-				} else if (this.hungry
-						&& !this.isEating()
+				} else if (this.hungry && !this.isEating()
 						&& startedChopstickAttempt + starvationTime / 40 < currentTime) {
 					synchronized (this) {
 						hasLeftChopstick = false;
 						hasRightChopstick = false;
 					}
 					try {
-						//System.err.println("Sleeping for a bit");
-						//Thread.sleep(Math.round(Math.random() * starvationTime
-						//		/ 40.0));
+						// System.err.println("Sleeping for a bit");
+						// Thread.sleep(Math.round(Math.random() *
+						// starvationTime
+						// / 40.0));
 						startedChopstickAttempt = System.currentTimeMillis();
 					} catch (Exception e) {
 					}
@@ -169,8 +220,7 @@ public class Philosopher implements Runnable {
 						if (!hasLeftChopstick) {
 							String left = "";
 							try {
-								left = new String(this.node.zk.getData(
-										this.node.cLeft, true, null));
+								left = new String(this.node.zk.getData(this.node.cLeft, true, null));
 							} catch (KeeperException | InterruptedException e1) {
 								e1.printStackTrace();
 							}
@@ -181,8 +231,7 @@ public class Philosopher implements Runnable {
 						if (!hasRightChopstick) {
 							String right = "";
 							try {
-								right = new String(this.node.zk.getData(
-										this.node.cRight, true, null));
+								right = new String(this.node.zk.getData(this.node.cRight, true, null));
 							} catch (KeeperException | InterruptedException e1) {
 								e1.printStackTrace();
 							}
@@ -208,31 +257,99 @@ public class Philosopher implements Runnable {
 		}
 	}
 
-//	public synchronized boolean requestChopstick(boolean isLeft) {
-//		if (isLeft)
-//			return !this.hasLeftChopstick;
-//		else
-//			return !this.hasRightChopstick;
-//	}
+	public void letsGame() {
+		String left = "";
+		try {
+			left = new String(this.node.zk.getData(this.node.gLeft, true, null));
+		} catch (KeeperException | InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+		String right = "";
+		try {
+			right = new String(this.node.zk.getData(this.node.gRight, true, null));
+		} catch (KeeperException | InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+		if (left.equals("true")) {
+			this.timeStartedGaming = System.currentTimeMillis();
+			this.isPlaying = true;
+			try {
+				System.out.println("started game with left");
+				this.node.zk.setData(this.node.gLeft, "game".getBytes(), -1);
+				this.node.zk.setData(this.node.gRight, "false".getBytes(), -1);
+
+			} catch (KeeperException | InterruptedException e) {
+				e.printStackTrace();
+			}
+
+		} else if (right.equals("true")) {
+			this.timeStartedGaming = System.currentTimeMillis();
+			this.isPlaying = true;
+
+			try {
+				this.node.zk.setData(this.node.gLeft, "false".getBytes(), -1);
+				System.out.println("started game with right");
+				this.node.zk.setData(this.node.gRight, "game".getBytes(), -1);
+			} catch (KeeperException | InterruptedException e) {
+				e.printStackTrace();
+			}
+
+		} else {
+			this.timeStartedWaiting = System.currentTimeMillis();
+			this.isWaiting = true;
+			System.out.println("started waiting for game");
+			try {
+				this.node.zk.setData(this.node.gLeft, "true".getBytes(), -1);
+				this.node.zk.setData(this.node.gRight, "true".getBytes(), -1);
+
+			} catch (KeeperException | InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	private void doneGaming() {
+		this.isPlaying = false;
+		this.isWaiting = false;
+		try {
+			this.node.zk.setData(this.node.gLeft, "false".getBytes(), -1);
+		} catch (KeeperException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		try {
+			this.node.zk.setData(this.node.gRight, "false".getBytes(), -1);
+		} catch (KeeperException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Done gaming");
+	}
+
+	// public synchronized boolean requestChopstick(boolean isLeft) {
+	// if (isLeft)
+	// return !this.hasLeftChopstick;
+	// else
+	// return !this.hasRightChopstick;
+	// }
 
 	public synchronized void takeChopstick(boolean isLeft) {
 		if (!this.hungry)
 			return;
 
 		if (isLeft) {
-			//System.out.println("I picked up my left chopstick");
+			// System.out.println("I picked up my left chopstick");
 			try {
-				this.node.zk.setData(this.node.cLeft,
-						"true".getBytes(), -1);
+				this.node.zk.setData(this.node.cLeft, "true".getBytes(), -1);
 			} catch (KeeperException | InterruptedException e) {
 				e.printStackTrace();
 			}
 			this.hasLeftChopstick = true;
 		} else {
-			//System.out.println("I picked up my right chopstick");
+			// System.out.println("I picked up my right chopstick");
 			try {
-				this.node.zk.setData(this.node.cLeft,
-						"true".getBytes(), -1);
+				this.node.zk.setData(this.node.cLeft, "true".getBytes(), -1);
 			} catch (KeeperException | InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -247,20 +364,18 @@ public class Philosopher implements Runnable {
 
 	public synchronized void dropChopstick(boolean isLeft) {
 		if (isLeft) {
-			//System.out.println("I put down my left chopstick");
+			// System.out.println("I put down my left chopstick");
 			try {
-				this.node.zk.setData(this.node.cLeft,
-						"false".getBytes(), -1);
+				this.node.zk.setData(this.node.cLeft, "false".getBytes(), -1);
 			} catch (KeeperException | InterruptedException e) {
 				e.printStackTrace();
 			}
 			this.hasLeftChopstick = false;
 
 		} else {
-			//System.out.println("I put down my right chopstick");
+			// System.out.println("I put down my right chopstick");
 			try {
-				this.node.zk.setData(this.node.cLeft,
-						"false".getBytes(), -1);
+				this.node.zk.setData(this.node.cLeft, "false".getBytes(), -1);
 			} catch (KeeperException | InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -292,8 +407,7 @@ public class Philosopher implements Runnable {
 		System.out.println("Now hungry");
 	}
 
-	public synchronized void nowThinking(long currentTime, boolean eat,
-			boolean drink) {
+	public synchronized void nowThinking(long currentTime, boolean eat, boolean drink) {
 		if (!eat && !drink) {
 			dropChopstick(true);
 			dropChopstick(false);

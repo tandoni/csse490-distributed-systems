@@ -142,6 +142,9 @@ public class Main {
 			case "thinking":
 				Philosopher.INSTANCE.nowThinking(System.currentTimeMillis(), false, false);
 				break;
+			case "game":
+				Philosopher.INSTANCE.letsGame();
+				break;
 			case "gui":
 				JFrame frame = new JFrame("Philosopher");
 				JPanel panel = new JPanel();
