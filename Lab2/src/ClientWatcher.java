@@ -22,29 +22,18 @@ public class ClientWatcher implements Watcher {
 		}
 
 		Node node = Philosopher.INSTANCE.getNode();
-		this.zk = node.zk;
 
 		if (path.equals(node.getCLeft())) {
 			if (Philosopher.INSTANCE.isHungry() && !Boolean.parseBoolean(val)) {
-				try {
-					zk.setData(path, "true".getBytes(), -1);
 					Philosopher.INSTANCE.takeChopstick(true);
-				} catch (KeeperException e) {
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+			} else  {
+				Philosopher.INSTANCE.dropChopstick(true);
 			}
 		} else if (path.equals(node.getCRight())) {
 			if (Philosopher.INSTANCE.isHungry() && !Boolean.parseBoolean(val)) {
-				try {
-					zk.setData(path, "true".getBytes(), -1);
-					Philosopher.INSTANCE.takeChopstick(false);
-				} catch (KeeperException e) {
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				Philosopher.INSTANCE.takeChopstick(true);
+			} else {
+				Philosopher.INSTANCE.dropChopstick(false);
 			}
 		} else if (path.equals(node.getGLeft())) {
 
@@ -52,14 +41,9 @@ public class ClientWatcher implements Watcher {
 
 		} else if (path.equals("/cup")) {
 			if (Philosopher.INSTANCE.isThirsty() && !Boolean.parseBoolean(val)) {
-				try {
-					zk.setData(path, "true".getBytes(), -1);
-					Philosopher.INSTANCE.giveCup();
-				} catch (KeeperException e) {
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				Philosopher.INSTANCE.setHasCup(true);
+			} else {
+				Philosopher.INSTANCE.dropCup();
 			}
 		}
 	}
