@@ -145,6 +145,9 @@ public class Main {
 			case "game":
 				Philosopher.INSTANCE.letsGame();
 				break;
+			case "not":
+				Philosopher.INSTANCE.nowManual("not");
+				break;
 			case "gui":
 				JFrame frame = new JFrame("Philosopher");
 				JPanel panel = new JPanel();

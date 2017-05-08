@@ -129,8 +129,8 @@ public class Philosopher implements Runnable {
 					}
 				}
 
-				if ((left.equals("game") || right.equals("game")) && (this.timeStartedGaming + 10000 < currentTime
-						&& this.timeStartedWaiting + 15000 < currentTime)) {
+				if ((left.equals("game") || right.equals("game")) && (this.timeStartedGaming + 30000 < currentTime
+						&& this.timeStartedWaiting + 30000 < currentTime)) {
 					doneGaming();
 				}
 				if (left.equals("false") && right.equals("false")) {
@@ -201,8 +201,8 @@ public class Philosopher implements Runnable {
 				} else if (this.hungry && !this.isEating()
 						&& startedChopstickAttempt + starvationTime / 40 < currentTime) {
 					synchronized (this) {
-						hasLeftChopstick = false;
-						hasRightChopstick = false;
+						dropChopstick(true);
+						dropChopstick(false);
 					}
 					try {
 						// System.err.println("Sleeping for a bit");
@@ -258,6 +258,9 @@ public class Philosopher implements Runnable {
 	}
 
 	public void letsGame() {
+		this.dropCup();
+		this.dropChopstick(true);
+		this.dropChopstick(false);
 		String left = "";
 		try {
 			left = new String(this.node.zk.getData(this.node.gLeft, true, null));
